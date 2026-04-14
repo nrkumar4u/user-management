@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>UserForge — User Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root{--bg:#0c0f14;--surface:#141820;--surface2:#1c2230;--border:#252d3d;--accent:#4f8ef7;--accent2:#7c3aed;--success:#22d3a0;--warning:#f59e0b;--danger:#f43f5e;--text:#e8edf5;--muted:#5a6580;--sa:#f43f5e;--admin:#4f8ef7;--mgr:#22d3a0;}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(79,142,247,.07) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 90%,rgba(124,58,237,.06) 0%,transparent 60%);pointer-events:none;z-index:0;}
+  #login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:100;background:var(--bg);}
+  .login-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px 44px;width:420px;box-shadow:0 32px 80px rgba(0,0,0,.5);animation:fadeUp .5s ease;}
+  .login-brand{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:8px;}
+  .login-brand span{color:var(--accent);}
+  .login-sub{color:var(--muted);font-size:13px;margin-bottom:36px;}
+  .field-group{margin-bottom:18px;}
+  .field-group label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase;}
+  .field-group input,.field-group select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:11px 14px;border-radius:10px;outline:none;transition:border-color .2s;}
+  .field-group input:focus,.field-group select:focus{border-color:var(--accent);}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all .18s;}
+  .btn-primary{background:var(--accent);color:#fff;width:100%;}
+  .btn-primary:hover{background:#3a7af5;transform:translateY(-1px);}
+  .btn-sm{padding:7px 14px;font-size:12px;border-radius:8px;}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-danger{background:rgba(244,63,94,.12);color:var(--danger);border:1px solid rgba(244,63,94,.2);}
+  .btn-danger:hover{background:rgba(244,63,94,.22);}
+  .btn-accent2{background:rgba(124,58,237,.12);color:#a78bfa;border:1px solid rgba(124,58,237,.2);}
+  .demo-accounts{margin-top:24px;border-top:1px solid var(--border);padding-top:20px;}
+  .demo-accounts p{font-size:11px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;}
+  .demo-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);margin:3px;transition:all .15s;}
+  .demo-btn:hover{border-color:var(--accent);}
+  .badge-sa{background:rgba(244,63,94,.15);color:var(--sa);border:1px solid rgba(244,63,94,.25);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;}
+  .badge-admin{background:rgba(79,142,247,.15);color:var(--admin);border:1px solid rgba(79,142,247,.25);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;}
+  .badge-mgr{background:rgba(34,211,160,.15);color:var(--mgr);border:1px solid rgba(34,211,160,.25);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600;}
+  .error-msg{color:var(--danger);font-size:12px;margin-top:8px;}
+  #app{display:none;min-height:100vh;position:relative;z-index:1;}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:28px 0;z-index:10;}
+  .sidebar-brand{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;padding:0 24px 28px;border-bottom:1px solid var(--border);}
+  .sidebar-brand span{color:var(--accent);}
+  .sidebar-nav{flex:1;padding:20px 12px;display:flex;flex-direction:column;gap:4px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;cursor:pointer;font-size:13.5px;color:var(--muted);transition:all .15s;font-weight:500;}
+  .nav-item:hover{background:var(--surface2);color:var(--text);}
+  .nav-item.active{background:rgba(79,142,247,.12);color:var(--accent);}
+  .nav-icon{font-size:15px;width:20px;text-align:center;}
+  .sidebar-footer{padding:20px 16px;border-top:1px solid var(--border);}
+  .user-chip{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .avatar{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+  .user-info{flex:1;min-width:0;}
+  .user-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .user-role-label{font-size:11px;color:var(--muted);}
+  .logout-full-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(244,63,94,.25);background:rgba(244,63,94,.08);color:var(--danger);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;transition:all .18s;}
+  .logout-full-btn:hover{background:rgba(244,63,94,.18);border-color:rgba(244,63,94,.5);}
+  .main{margin-left:240px;padding:40px;min-height:100vh;}
+  .page{display:none;animation:fadeUp .3s ease;}
+  .page.active{display:block;}
+  .page-header{margin-bottom:32px;}
+  .page-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:6px;}
+  .page-sub{color:var(--muted);font-size:14px;}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;transition:border-color .2s;}
+  .stat-card:hover{border-color:var(--accent);}
+  .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+  .stat-value{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;}
+  .stat-value.red{color:var(--sa);}.stat-value.blue{color:var(--admin);}.stat-value.green{color:var(--mgr);}
+  .stat-delta{font-size:12px;color:var(--muted);margin-top:6px;}
+  .toolbar{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+  .search-box{flex:1;min-width:180px;max-width:320px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 14px;font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--text);outline:none;transition:border-color .2s;}
+  .search-box:focus{border-color:var(--accent);}
+  .filter-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:9px 12px;border-radius:10px;outline:none;cursor:pointer;}
+  .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+  table{width:100%;border-collapse:collapse;}
+  thead{background:var(--surface2);}
+  thead th{padding:14px 18px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+  tbody tr{border-top:1px solid var(--border);transition:background .12s;}
+  tbody tr:hover{background:rgba(255,255,255,.02);}
+  td{padding:14px 18px;font-size:13.5px;}
+  .user-cell{display:flex;align-items:center;gap:10px;}
+  .status-dot{width:7px;height:7px;border-radius:50%;}
+  .status-dot.active{background:var(--success);box-shadow:0 0 6px rgba(34,211,160,.5);}
+  .status-dot.inactive{background:var(--muted);}
+  .actions{display:flex;gap:6px;}
+  .mono{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:36px;width:480px;max-height:90vh;overflow-y:auto;animation:fadeUp .25s ease;position:relative;}
+  .modal-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:24px;}
+  .modal-actions{display:flex;gap:10px;margin-top:28px;justify-content:flex-end;}
+  .close-btn{position:absolute;top:20px;right:20px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;}
+  .close-btn:hover{color:var(--text);}
+  .info-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+  .info-row:last-child{border-bottom:none;}
+  .info-label{color:var(--muted);}
+  .log-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap;}
+  .log-item:last-child{border-bottom:none;}
+  .log-time{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);min-width:140px;}
+  .log-actor{font-weight:600;}.log-action{color:var(--muted);}
+  .log-badge{padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;}
+  .log-create{background:rgba(34,211,160,.12);color:var(--success);}
+  .log-update{background:rgba(79,142,247,.12);color:var(--admin);}
+  .log-delete{background:rgba(244,63,94,.12);color:var(--danger);}
+  .log-login{background:rgba(245,158,11,.12);color:var(--warning);}
+  #toast{position:fixed;bottom:28px;right:28px;z-index:999;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;font-size:13.5px;box-shadow:0 12px 40px rgba(0,0,0,.4);display:none;}
+  #toast.show{display:flex;align-items:center;gap:10px;animation:slideIn .25s ease;}
+  #toast.success{border-color:rgba(34,211,160,.3);}
+  #toast.error{border-color:rgba(244,63,94,.3);}
+  .perm-table{width:100%;border-collapse:collapse;}
+  .perm-table th,.perm-table td{padding:12px 16px;text-align:center;font-size:13px;border:1px solid var(--border);}
+  .perm-table th{background:var(--surface2);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+  .perm-table td:first-child{text-align:left;color:var(--muted);}
+  .check{color:var(--success);font-size:16px;}.cross{color:var(--border);font-size:16px;}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+  .empty-state .icon{font-size:40px;margin-bottom:14px;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-brand">User<span>Forge</span></div>
+    <div class="login-sub">Role-based user management platform</div>
+    <div class="field-group">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="you@company.com" />
+    </div>
+    <div class="field-group">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="••••••••" />
+    </div>
+    <div id="login-error" class="error-msg"></div>
+    <br/>
+    <button class="btn btn-primary" id="btn-login">Sign In →</button>
+    <div class="demo-accounts">
+      <p>Quick Demo Access</p>
+      <button class="demo-btn" data-email="superadmin@userforge.io" data-pass="admin123">
+        <span class="badge-sa">Super Admin</span> superadmin@userforge.io
+      </button>
+      <button class="demo-btn" data-email="admin@userforge.io" data-pass="admin123">
+        <span class="badge-admin">Admin</span> admin@userforge.io
+      </button>
+      <button class="demo-btn" data-email="manager@userforge.io" data-pass="admin123">
+        <span class="badge-mgr">Manager</span> manager@userforge.io
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">User<span>Forge</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span><span>Dashboard</span></div>
+      <div class="nav-item" data-page="users"><span class="nav-icon">👥</span><span>Users</span></div>
+      <div class="nav-item" data-page="logs"><span class="nav-icon">📋</span><span>Audit Logs</span></div>
+      <div class="nav-item" data-page="permissions"><span class="nav-icon">🔐</span><span>Permissions</span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="avatar" id="sidebar-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-name">—</div>
+          <div class="user-role-label" id="sidebar-role">—</div>
+        </div>
+      </div>
+      <button class="logout-full-btn" id="btn-logout"><span>⏻</span><span>Logout</span></button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Overview of your user management system</div>
+      </div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="table-wrap" style="padding:28px;">
+        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:16px;">Recent Activity</div>
+        <div id="recent-logs"></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-users">
+      <div class="page-header">
+        <div class="page-title">User Management</div>
+        <div class="page-sub" id="users-sub">Manage accounts across all roles</div>
+      </div>
+      <div class="toolbar">
+        <input class="search-box" placeholder="🔍  Search users..." id="user-search" />
+        <select class="filter-select" id="role-filter">
+          <option value="">All Roles</option>
+          <option value="super_admin">Super Admin</option>
+          <option value="admin">Admin</option>
+          <option value="manager">Manager</option>
+        </select>
+        <select class="filter-select" id="status-filter">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <button class="btn btn-primary btn-sm" id="add-user-btn">+ Add User</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>User</th><th>Role</th><th>Status</th><th>Created</th><th>Last Login</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page" id="page-logs">
+      <div class="page-header">
+        <div class="page-title">Audit Logs</div>
+        <div class="page-sub">Complete trail of all system actions</div>
+      </div>
+      <div class="toolbar">
+        <input class="search-box" placeholder="🔍  Search logs..." id="log-search" />
+        <select class="filter-select" id="log-filter">
+          <option value="">All Actions</option>
+          <option value="CREATE">Create</option>
+          <option value="UPDATE">Update</option>
+          <option value="DELETE">Delete</option>
+          <option value="LOGIN">Login</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" id="btn-clear-logs">Clear Logs</button>
+      </div>
+      <div class="table-wrap" style="padding:8px 24px;" id="logs-container"></div>
+    </div>
+
+    <div class="page" id="page-permissions">
+      <div class="page-header">
+        <div class="page-title">Permissions Matrix</div>
+        <div class="page-sub">Access control by role</div>
+      </div>
+      <div class="table-wrap" style="padding:28px;">
+        <table class="perm-table">
+          <thead><tr>
+            <th style="text-align:left">Action</th>
+            <th><span class="badge-sa">Super Admin</span></th>
+            <th><span class="badge-admin">Admin</span></th>
+            <th><span class="badge-mgr">Manager</span></th>
+          </tr></thead>
+          <tbody id="perm-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay" style="display:none;" class="modal-overlay">
+  <div class="modal" id="modal-box">
+    <button class="close-btn" id="modal-close-btn">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
